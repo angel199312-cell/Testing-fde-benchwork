@@ -1,0 +1,12 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const nodes={},el=()=>({style:{},value:'',addEventListener(){}});
+const c={document:{getElementById:id=>nodes[id]??=el()},localStorage:{getItem:()=>null,setItem(){}},Intl,Date,setTimeout(){}};
+vm.createContext(c);vm.runInContext(fs.readFileSync('dist/app.js','utf8'),c);
+const run=x=>vm.runInContext(x,c);
+assert.ok(!run('gates().contract'));
+run('s.checks={option:true,employer:true,datefield:true,offerSent:true}');
+assert.ok(!run('gates().contract'));assert.ok(!run('emailReady()'));
+run('s.checks.receipt=true');assert.ok(run('gates().contract'));assert.ok(!run('emailReady()'));
+run('s.checks.contractSent=true;s.checks.employeeOption=true;s.checks.employerOption=true;s.arrival={date:"2026-11-09",time:"09:00",zone:"America/Vancouver",address:"123 Main St, Vancouver, BC"}');
+assert.ok(run('emailReady()'));run('s.arrival.address=" "');assert.ok(!run('emailReady()'));
+console.log('PASS: initial render, receipt gate, contract gate, required arrival details');
